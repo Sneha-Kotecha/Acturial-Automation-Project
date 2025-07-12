@@ -1,0 +1,314 @@
+# ================================
+# ACTUARIAL AUTOMATION PLATFORM CONFIGURATION
+# For Streamlit App
+# ================================
+
+# Application Settings
+application:
+  name: "Actuarial Automation Platform"
+  version: "2.0.0"
+  environment: "production"  # development, staging, production
+  debug: false
+  log_level: "INFO"
+
+# Database Configuration
+database:
+  type: "postgresql"  # postgresql, sqlite, mysql
+  host: "localhost"
+  port: 5432
+  name: "actuarial_db"
+  username: "actuarial_user"
+  password: "${DB_PASSWORD}"  # Use environment variable
+  pool_size: 10
+  max_overflow: 20
+
+# Redis Configuration (for caching)
+redis:
+  host: "localhost"
+  port: 6379
+  db: 0
+  password: "${REDIS_PASSWORD}"
+  ttl: 3600  # Cache TTL in seconds
+
+# Data Sources
+data_sources:
+  members:
+    type: "csv"
+    path: "data/members.csv"
+    refresh_interval: 3600  # seconds
+  assets:
+    type: "csv" 
+    path: "data/assets.csv"
+    refresh_interval: 1800
+  contributions:
+    type: "csv"
+    path: "data/contributions.csv"
+    refresh_interval: 3600
+  mortality_tables:
+    standard: "data/mortality_standard.csv"
+    improved: "data/mortality_improved.csv"
+    stressed: "data/mortality_stressed.csv"
+
+# Actuarial Parameters
+actuarial:
+  discount_rates:
+    risk_free: 0.035
+    corporate_aa: 0.045
+    corporate_bbb: 0.055
+    equity_risk_premium: 0.05
+  
+  mortality_tables:
+    standard: "standard"
+    longevity_improvement: 0.02  # 2% annual improvement
+    volatility: 0.005
+  
+  regulatory_margins:
+    ias19: 0.05
+    solvency_ii: 0.10
+    tpr: 0.03
+  
+  stress_scenarios:
+    longevity_shock:
+      mortality_improvement: -0.25  # 25% reduction in mortality rates
+      impact_weight: 1.0
+    
+    interest_rate_up:
+      rate_shock: 0.01  # 100bp increase
+      impact_weight: 1.0
+    
+    interest_rate_down:
+      rate_shock: -0.01  # 100bp decrease
+      impact_weight: 1.0
+    
+    inflation_shock:
+      inflation_increase: 0.01  # 100bp increase
+      impact_weight: 0.8
+    
+    combined_stress:
+      mortality_improvement: -0.15
+      rate_shock: 0.005
+      inflation_increase: 0.005
+      impact_weight: 1.2
+
+# Monte Carlo Configuration
+monte_carlo:
+  simulations: 10000
+  confidence_levels: [0.5, 0.75, 0.95, 0.99]
+  time_horizon: 30  # years
+  
+  # Stochastic model parameters
+  interest_rate_model:
+    type: "vasicek"  # vasicek, cir, hw
+    mean_reversion: 0.1
+    long_term_mean: 0.035
+    volatility: 0.01
+  
+  mortality_model:
+    type: "lee_carter"
+    trend_volatility: 0.005
+    random_walk: true
+
+# Machine Learning Configuration
+machine_learning:
+  models:
+    longevity_prediction:
+      algorithm: "random_forest"  # random_forest, xgboost, neural_network
+      hyperparameters:
+        n_estimators: 100
+        max_depth: 10
+        min_samples_split: 5
+      validation:
+        test_size: 0.2
+        cv_folds: 5
+    
+    mortality_forecasting:
+      algorithm: "xgboost"
+      hyperparameters:
+        n_estimators: 200
+        learning_rate: 0.1
+        max_depth: 6
+  
+  feature_engineering:
+    enable_auto_features: true
+    polynomial_features: true
+    interaction_terms: true
+    
+  model_validation:
+    rmse_threshold: 0.1
+    r2_threshold: 0.8
+    bias_threshold: 0.05
+
+# Regulatory Compliance
+regulatory:
+  jurisdiction: "UK"  # UK, EU, US
+  
+  solvency_ii:
+    enabled: true
+    scr_methods: ["standard_formula", "internal_model"]
+    risk_modules:
+      - "market_risk"
+      - "credit_risk" 
+      - "life_underwriting_risk"
+      - "operational_risk"
+    
+  ias19:
+    enabled: true
+    discount_curve: "corporate_aa"
+    mortality_table: "standard"
+    
+  tpr:
+    enabled: true
+    scheme_funding_basis: "technical_provisions"
+    
+  reporting_frequency:
+    solvency_ii: "quarterly"
+    ias19: "annual"
+    tpr: "annual"
+
+# API Configuration
+api:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 4
+  timeout: 300
+  rate_limiting:
+    enabled: true
+    requests_per_minute: 100
+  
+  authentication:
+    enabled: true
+    type: "jwt"  # jwt, oauth2, api_key
+    secret_key: "${API_SECRET_KEY}"
+    token_expiry: 3600
+
+# Workflow Orchestration
+workflows:
+  schedules:
+    daily_valuation:
+      enabled: true
+      time: "06:00"
+      timezone: "UTC"
+      
+    weekly_stress_testing:
+      enabled: true
+      day: "monday"
+      time: "07:00"
+      
+    monthly_reporting:
+      enabled: true
+      day: 1
+      time: "08:00"
+      
+    quarterly_solvency:
+      enabled: true
+      months: [3, 6, 9, 12]
+      day: 15
+      time: "09:00"
+
+# Data Quality
+data_quality:
+  validation_rules:
+    members:
+      required_fields: ["member_id", "date_of_birth", "gender", "salary"]
+      age_range: [16, 100]
+      salary_range: [10000, 1000000]
+      
+    mortality_tables:
+      required_columns: ["age", "qx_male", "qx_female"]
+      rate_range: [0, 1]
+      
+  monitoring:
+    enabled: true
+    alert_thresholds:
+      missing_data: 0.05  # 5% missing data triggers alert
+      outlier_detection: 0.01  # 1% outliers triggers alert
+      
+# Logging Configuration
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  
+  handlers:
+    file:
+      enabled: true
+      filename: "logs/actuarial_platform.log"
+      max_bytes: 10485760  # 10MB
+      backup_count: 5
+      
+    console:
+      enabled: true
+      
+    email:
+      enabled: false
+      smtp_server: "smtp.company.com"
+      recipients: ["actuarial-team@company.com"]
+      subject_prefix: "[Actuarial Platform]"
+
+# Security Configuration
+security:
+  encryption:
+    algorithm: "AES-256-GCM"
+    key_rotation_days: 90
+    
+  data_protection:
+    anonymization_enabled: true
+    retention_period_days: 2555  # 7 years
+    
+  audit_logging:
+    enabled: true
+    events: ["calculation", "data_access", "report_generation"]
+    
+# Performance Optimization
+performance:
+  caching:
+    enabled: true
+    strategy: "redis"
+    ttl_calculations: 3600  # 1 hour
+    ttl_reports: 86400      # 1 day
+    
+  parallel_processing:
+    enabled: true
+    max_workers: 8
+    chunk_size: 1000
+    
+  memory_management:
+    max_memory_usage: "8GB"
+    garbage_collection: "automatic"
+
+# Monitoring and Alerting
+monitoring:
+  metrics:
+    enabled: true
+    provider: "prometheus"  # prometheus, datadog, newrelic
+    
+  alerts:
+    calculation_errors:
+      threshold: 5  # 5 errors in 1 hour
+      severity: "high"
+      
+    performance_degradation:
+      response_time_threshold: 30  # seconds
+      severity: "medium"
+      
+    data_quality_issues:
+      threshold: 0.05  # 5% data quality issues
+      severity: "high"
+
+# Development and Testing
+development:
+  debug_mode: false
+  profiling_enabled: false
+  test_data_generation:
+    enabled: true
+    sample_size: 1000
+    
+testing:
+  unit_tests:
+    coverage_threshold: 0.8
+    
+  integration_tests:
+    enabled: true
+    
+  stress_tests:
+    enabled: true
+    load_factor: 2.0
